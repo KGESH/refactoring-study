@@ -2,6 +2,10 @@ import Invoices from './invoices';
 import Plays from './plays';
 
 export const statement = (invoice: any, plays: any) => {
+  return renderPlainText(createStatementData(invoice, plays));
+};
+
+export const createStatementData = (invoice: any, plays: any) => {
   const enrichPerformance = (aPerformance: any) => {
     const result = Object.assign({}, aPerformance);
     result.play = playFor(result);
@@ -10,6 +14,18 @@ export const statement = (invoice: any, plays: any) => {
     return result;
   };
 
+  const totalVolumeCredits = (data: any) => {
+    return data.performances.reduce((total: number, p: any) => total + p.volumeCredits, 0);
+  };
+
+  const totalAmount = (data: any) => {
+    let result = 0;
+    for (let perf of data.performances) {
+      result += perf.amount;
+    }
+
+    return data.performances.reduce((total: number, p: any) => total + p.amount, 0);
+  };
   const volumeCreditsFor = (aPerformance: any) => {
     let volumeCredits = 0;
     volumeCredits += Math.max(aPerformance.audience - 30, 0);
@@ -50,15 +66,16 @@ export const statement = (invoice: any, plays: any) => {
     return result;
   };
 
-  const statementData = {
-    customer: invoice.customer,
-    performances: invoice.performances.map(enrichPerformance),
-  };
-  return renderPlainText(statementData);
+  let statementData: any = {};
+  statementData.customer = invoice.customer;
+  statementData.performances = invoice.performances.map(enrichPerformance);
+  statementData.totalAmount = totalAmount(statementData);
+  statementData.totalVolumeCredits = totalVolumeCredits(statementData);
+
+  return statementData;
 };
 
 export const renderPlainText = (data: any) => {
-  let result = `청구 내역 (고객명: ${data.customer})\n`;
   const usd = (aNumber: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -66,29 +83,13 @@ export const renderPlainText = (data: any) => {
       minimumFractionDigits: 2,
     }).format(aNumber / 100);
   };
+  let result = `청구 내역 (고객명: ${data.customer})\n`;
 
-  const totalVolumeCredits = () => {
-    let result = 0;
-    for (let perf of data.performances) {
-      result += perf.volumeCredits;
-    }
-    return result;
-  };
-  ``;
-  const totalAmount = () => {
-    let result = 0;
-
-    for (let perf of data.performances) {
-      result += perf.amount;
-    }
-
-    return result;
-  };
   for (let perf of data.performances) {
     result += ` ${perf.play.name}: ${usd(perf.amount)} (${perf.audience}석)\n`;
   }
 
-  result += `총액: ${usd(totalAmount())}\n`;
-  result += `적립 포인트: ${totalVolumeCredits()}점\n`;
+  result += `총액: ${usd(data.totalAmount)}\n`;
+  result += `적립 포인트: ${data.totalVolumeCredits}점\n`;
   return result;
 };
