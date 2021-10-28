@@ -5,19 +5,26 @@ export const statement = (invoice: any, plays: any) => {
   let totalAmount = 0;
   let volumeCredits = 0;
   let result = `청구 내역 (고객명: ${invoice.customer})\n`;
-  const format = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-  }).format;
+  // const format = new Intl.NumberFormat('en-US', {
+  //   style: 'currency',
+  //   currency: 'USD',
+  //   minimumFractionDigits: 2,
+  // }).format;
+  const usd = (aNumber: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+    }).format(aNumber / 100);
+  };
 
   const playFor = (aPerformance: any) => {
     return plays[aPerformance.playID];
   };
 
-  const amountFor = (aPerformance: any, play: any) => {
+  const amountFor = (aPerformance: any) => {
     let result = 0;
-    switch (play.type) {
+    switch (playFor(aPerformance).type) {
       case 'tragedy':
         result = 40000;
         if (aPerformance.audience > 30) {
@@ -34,27 +41,30 @@ export const statement = (invoice: any, plays: any) => {
         break;
 
       default:
-        throw new Error(`알 수 없는 장르: ${play.type}`);
+        throw new Error(`알 수 없는 장르: ${playFor(aPerformance).type}`);
     }
 
     return result;
   };
 
-  for (let perf of invoice.performances) {
-    const play = playFor(perf);
-    let thisAmount = amountFor(perf, play);
+  const volumeCreditsFor = (aPerformance: any) => {
+    let volumeCredits = 0;
+    volumeCredits += Math.max(aPerformance.audience - 30, 0);
 
-    volumeCredits += Math.max(perf.audience - 30, 0);
-
-    if ('comedy' === play.type) {
-      volumeCredits += Math.floor(perf.audience / 5);
+    if ('comedy' === playFor(aPerformance).type) {
+      volumeCredits += Math.floor(aPerformance.audience / 5);
     }
 
-    result += ` ${play.name}: ${format(thisAmount / 100)} (${perf.audience}석)\n`;
-    totalAmount += thisAmount;
+    return volumeCredits;
+  };
+
+  for (let perf of invoice.performances) {
+    volumeCredits += volumeCreditsFor(perf);
+    result += ` ${playFor(perf).name}: ${usd(amountFor(perf))} (${perf.audience}석)\n`;
+    totalAmount += amountFor(perf);
   }
 
-  result += `총액: ${format(totalAmount / 100)}\n`;
+  result += `총액: ${usd(totalAmount)}\n`;
   result += `적립 포인트: ${volumeCredits}점\n`;
   return result;
 };
