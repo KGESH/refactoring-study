@@ -7,10 +7,6 @@ class PerformanceCalculator {
     this.play = aPlay;
   }
 
-  get amount() {
-    throw new Error(`서브 클래스에서 처리함`);
-  }
-
   get volumeCredits() {
     return Math.max(this.performance.audience - 30, 0);
   }
@@ -60,8 +56,7 @@ class ComedyCalculator extends PerformanceCalculator {
   play: any;
 
   constructor(aPerformance: any, aPlay: any) {
-    this.performance = aPerformance;
-    this.play = aPlay;
+    super(aPerformance, aPlay);
   }
 
   get amount() {

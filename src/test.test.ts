@@ -1,9 +1,6 @@
 import Invoices from './invoices';
 import Plays from './plays';
 import { statement } from './index';
-// const Invoices = require('../js/invoices.json');
-// const Plays = require('../js/plays.json');
-// const statement = require('./index.ts');
 
 describe('test index.ts', () => {
   it('should be match result string', () => {
