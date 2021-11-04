@@ -10,6 +10,27 @@ class PerformanceCalculator {
   get volumeCredits() {
     return Math.max(this.performance.audience - 30, 0);
   }
+
+  get amount() {
+    let result = 0;
+
+    switch (this.play.type) {
+      case 'tragedy':
+        throw 'use child class!';
+
+      case 'comedy':
+        result = 30000;
+        if (this.performance.audience > 20) {
+          result += 10000 + 500 * (this.performance.audience - 20);
+        }
+        result += 300 * this.performance.audience;
+        break;
+
+      default:
+        throw new Error('알수없는 장르');
+    }
+    return result;
+  }
 }
 
 const createPerformanceCalculator = (aPerformance: any, aPlay: any) => {
@@ -112,7 +133,7 @@ export const createStatementData = (invoice: any, plays: any) => {
   };
 
   const amountFor = (aPerformance: any) => {
-    return new PerformanceCalculator(aPerformance, playFor(aPerformance)).amount;
+    return new PerformanceCalculator(aPerformance, playFor(aPerformance));
   };
 
   let result: any = {};
