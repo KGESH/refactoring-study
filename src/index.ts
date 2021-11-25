@@ -1,5 +1,3 @@
-import Invoices from './invoices';
-import Plays from './plays';
 import { createStatementData } from './createStatementData';
 
 export const statement = (invoice: any, plays: any) => {
